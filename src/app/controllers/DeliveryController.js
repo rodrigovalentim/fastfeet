@@ -3,8 +3,8 @@ import * as Yup from 'yup';
 import Delivery from '../models/Delivery';
 import Deliveryman from '../models/Deliveryman';
 import Recipient from '../models/Recipient';
-
-import Mail from '../../lib/Mail';
+import Queue from '../../lib/Queue';
+import DeliveryMail from '../jobs/DeliveryMail';
 
 class DeliveryController {
   async store(req, res) {
@@ -15,14 +15,14 @@ class DeliveryController {
     });
 
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'validation fails' });
+      return res.status(400).json({ error: 'Validation fails' });
     }
 
     const { recipient_id, deliveryman_id, product } = req.body;
 
-    const recipientExists = await Recipient.findByPk(recipient_id);
+    const recipient = await Recipient.findByPk(recipient_id);
 
-    if (!recipientExists) {
+    if (!recipient) {
       return res.status(400).json({ error: 'Recipient does not exists' });
     }
 
@@ -38,21 +38,10 @@ class DeliveryController {
       product,
     });
 
-    await Mail.sendMail({
-      to: `${deliveryman.name} <${deliveryman.email}>`,
-      subject: 'Você tem uma nova entrega',
-      template: 'delivery',
-      context: {
-        deliveryman: deliveryman.name,
-        product,
-        recipient_name: recipientExists.name,
-        recipient_street: recipientExists.street,
-        recipient_number: recipientExists.number,
-        recipient_complement: recipientExists.complement,
-        recipient_state: recipientExists.state,
-        recipient_city: recipientExists.city,
-        recipient_zip_code: recipientExists.zip_code,
-      },
+    await Queue.add(DeliveryMail.key, {
+      deliveryman,
+      recipient,
+      product,
     });
 
     return res.json(delivery);
@@ -92,6 +81,26 @@ class DeliveryController {
       limit: 20,
       offset: (page - 1) * 20,
       attributes: ['id', 'product', 'canceled_at', 'start_date', 'end_date'],
+      include: [
+        {
+          model: Recipient,
+          as: 'recipient',
+          attributes: [
+            'id',
+            'name',
+            'street',
+            'number',
+            'complement',
+            'city',
+            'state',
+          ],
+        },
+        {
+          model: Deliveryman,
+          as: 'deliveryman',
+          attributes: ['id', 'name'],
+        },
+      ],
     });
 
     res.json(delivery);
@@ -105,14 +114,11 @@ class DeliveryController {
     });
 
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'validation fails' });
+      return res.status(400).json({ error: 'Validation fails' });
     }
 
     const { id } = req.params;
 
-    /*
-     * Check if delivery exists
-     */
     const delivery = await Delivery.findByPk(id);
 
     if (!delivery) {
@@ -166,7 +172,7 @@ class DeliveryController {
 
     await delivery.save();
 
-    return res.json(delivery);
+    return res.json({ message: 'Delivery has deleted!' });
   }
 }
 

@@ -25,12 +25,11 @@ routes.put('/users', UserController.update);
 routes.post('/recipients', RecipientController.store);
 routes.put('/recipients/:id', RecipientController.update);
 
-routes.post('/deliverymen', DeliverymanController.store);
-routes.get('/deliverymen', DeliverymanController.index);
-routes.get('/deliverymen/:id', DeliverymanController.show);
-routes.put('/deliverymen/:id', DeliverymanController.update);
-
-routes.delete('/deliverymen/:id', DeliverymanController.delete);
+routes.post('/deliveryman', DeliverymanController.store);
+routes.get('/deliveryman', DeliverymanController.index);
+routes.get('/deliveryman/:id', DeliverymanController.show);
+routes.put('/deliveryman/:id', DeliverymanController.update);
+routes.delete('/deliveryman/:id', DeliverymanController.delete);
 
 routes.post('/deliveries', DeliveryController.store);
 routes.get('/deliveries/:id', DeliveryController.show);
