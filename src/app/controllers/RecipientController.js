@@ -6,12 +6,18 @@ class RecipientController {
     const schema = Yup.object().shape({
       name: Yup.string().required(),
       street: Yup.string().required(),
-      number: Yup.string().required(),
+      number: Yup.number().required(),
       complement: Yup.string().required(),
       state: Yup.string().required(),
       city: Yup.string().required(),
       zip_code: Yup.string().required(),
     });
+
+    if (!req.admin) {
+      return res.status(401).json({
+        error: "Can't create a Recipient, User don't have permission",
+      });
+    }
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: 'Validation fails' });

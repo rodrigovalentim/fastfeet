@@ -25,7 +25,7 @@ module.exports = {
       deliveryman_id: {
         // Referência ao entregador
         type: Sequelize.INTEGER,
-        references: { model: 'deliverymen', key: 'id' },
+        references: { model: 'deliveryman', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL',
         allowNull: false,

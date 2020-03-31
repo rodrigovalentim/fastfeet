@@ -14,6 +14,12 @@ class DeliverymanController {
       avatar_id: Yup.string().notRequired(),
     });
 
+    if (!req.admin) {
+      return res.status(401).json({
+        error: "Can't create a Delivery Man, User don't have permission",
+      });
+    }
+
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: 'validation fails' });
     }
