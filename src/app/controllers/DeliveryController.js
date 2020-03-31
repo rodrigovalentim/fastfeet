@@ -5,6 +5,8 @@ import Deliveryman from '../models/Deliveryman';
 import Recipient from '../models/Recipient';
 import Queue from '../../lib/Queue';
 import DeliveryMail from '../jobs/DeliveryMail';
+import UpdateDeliveryMail from '../jobs/UpdateDeliveryMail';
+import CancellationDeliveryMail from '../jobs/CancellationDeliveryMail';
 
 class DeliveryController {
   async store(req, res) {
@@ -133,9 +135,9 @@ class DeliveryController {
       return res.status(400).json({ error: 'Recipient does not exists' });
     }
 
-    const deliverymanExixts = await Deliveryman.findByPk(deliveryman_id);
+    const deliverymanExists = await Deliveryman.findByPk(deliveryman_id);
 
-    if (!deliverymanExixts) {
+    if (!deliverymanExists) {
       return res.status(400).json({ error: 'Deliveryman does not exists' });
     }
 
@@ -156,13 +158,49 @@ class DeliveryController {
       ],
     });
 
+    if (
+      delivery.recipient_id !== recipient_id &&
+      delivery.deliveryman_id === deliveryman_id
+    ) {
+      /* alerta troca do destinatario */
+      await Queue.add(UpdateDeliveryMail.key, {
+        deliveryman,
+        recipient,
+        product,
+      });
+    } else if (
+      delivery.recipient_id === recipient_id &&
+      delivery.deliveryman_id !== deliveryman_id
+    ) {
+      /* alerta nova entrega para o entregador */
+      await Queue.add(DeliveryMail.key, {
+        deliveryman,
+        recipient,
+        product,
+      });
+    }
+
     return res.json({ id, product, recipient, deliveryman });
   }
 
   async delete(req, res) {
     const { id } = req.params;
 
-    const delivery = await Delivery.findByPk(id);
+    const delivery = await Delivery.findByPk(id, {
+      attributes: ['id', 'product'],
+      include: [
+        {
+          model: Recipient,
+          as: 'recipient',
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Deliveryman,
+          as: 'deliveryman',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
 
     if (!delivery) {
       return res.status(400).json({ error: 'Delivery does not exists' });
@@ -171,6 +209,14 @@ class DeliveryController {
     delivery.canceled_at = new Date();
 
     await delivery.save();
+
+    const { deliveryman, recipient, product } = delivery;
+    /* alerta troca do destinatario */
+    await Queue.add(CancellationDeliveryMail.key, {
+      deliveryman,
+      recipient,
+      product,
+    });
 
     return res.json({ message: 'Delivery has deleted!' });
   }
