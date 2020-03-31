@@ -18,7 +18,9 @@ class ManagementDeliveryController {
         isBefore(startDate, setHours(new Date(), 8)) ||
         isAfter(startDate, setHours(new Date(), 18))
       ) {
-        return res.status(400).json({ error: 'Invalid time' });
+        return res
+          .status(400)
+          .json({ error: 'Invalid time to delivery package' });
       }
 
       delivery.start_date = startDate;
@@ -31,7 +33,7 @@ class ManagementDeliveryController {
 
       return res.json({ msg: 'Successful ended Delivery', id });
     }
-    return res.json({ error: 'Error on update start/end delivery' });
+    return res.json({ error: 'Error on update start/end time of delivery' });
   }
 }
 

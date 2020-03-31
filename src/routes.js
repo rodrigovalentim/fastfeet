@@ -9,6 +9,7 @@ import RecipientController from './app/controllers/RecipientController';
 import DeliverymanController from './app/controllers/DeliverymanController';
 import DeliveryController from './app/controllers/DeliveryController';
 import ManagementDeliveryController from './app/controllers/ManagementDeliveryController';
+import DeliveryProblemsController from './app/controllers/DeliveryProblemsController';
 
 import authMiddlewar from './app/middlewares/auth';
 
@@ -32,10 +33,18 @@ routes.put('/deliveryman/:id', DeliverymanController.update);
 routes.delete('/deliveryman/:id', DeliverymanController.delete);
 
 routes.post('/deliveries', DeliveryController.store);
-routes.get('/deliveries/:id', DeliveryController.show);
-routes.get('/deliveries', DeliveryController.index);
+routes.get('/deliveries', DeliveryController.show);
+routes.get('/deliveries/:id', DeliveryController.index);
 routes.put('/deliveries/:id', DeliveryController.update);
 routes.delete('/deliveries/:id', DeliveryController.delete);
+
+routes.get('/problems', DeliveryProblemsController.show);
+routes.get('/delivery/:deliveryId/problems', DeliveryProblemsController.index);
+routes.post('/delivery/:deliveryId/problems', DeliveryProblemsController.store);
+routes.delete(
+  '/delivery/:problemId/problems',
+  DeliveryProblemsController.delete
+);
 
 routes.put('/delivery/:id/delivered', ManagementDeliveryController.update);
 

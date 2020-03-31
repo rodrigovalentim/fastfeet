@@ -49,7 +49,7 @@ class DeliveryController {
     return res.json(delivery);
   }
 
-  async show(req, res) {
+  async index(req, res) {
     const { id } = req.params;
 
     const delivery = await Delivery.findByPk(id, {
@@ -75,7 +75,7 @@ class DeliveryController {
     return res.json(delivery);
   }
 
-  async index(req, res) {
+  async show(req, res) {
     const { page = 1 } = req.query;
 
     const delivery = await Delivery.findAll({
@@ -185,9 +185,8 @@ class DeliveryController {
 
   async delete(req, res) {
     const { id } = req.params;
-
     const delivery = await Delivery.findByPk(id, {
-      attributes: ['id', 'product'],
+      attributes: ['id', 'product', 'canceled_at'],
       include: [
         {
           model: Recipient,
@@ -204,6 +203,10 @@ class DeliveryController {
 
     if (!delivery) {
       return res.status(400).json({ error: 'Delivery does not exists' });
+    }
+
+    if (delivery.canceled_at) {
+      return res.status(400).json({ error: 'Delivery already canceled' });
     }
 
     delivery.canceled_at = new Date();
