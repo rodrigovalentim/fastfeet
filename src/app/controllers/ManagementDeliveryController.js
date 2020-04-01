@@ -6,10 +6,16 @@ class ManagementDeliveryController {
   async update(req, res) {
     const { id } = req.params;
 
-    const delivery = await Delivery.findByPk(id);
+    const delivery = await Delivery.findByPk(id, {
+      where: { canceled_at: null },
+    });
 
     if (!delivery) {
       return res.status(400).json({ error: 'Delivery does not exists' });
+    }
+
+    if (delivery.start_date && delivery.end_date) {
+      return res.status(400).json({ error: 'This order is already done' });
     }
 
     if (!delivery.start_date) {

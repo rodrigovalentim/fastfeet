@@ -2,6 +2,8 @@ import DeliveryProblems from '../models/DeliveryProblems';
 import Delivery from '../models/Delivery';
 import Deliveryman from '../models/Deliveryman';
 import Recipient from '../models/Recipient';
+import CancellationDeliveryMail from '../jobs/CancellationDeliveryMail';
+import Queue from '../../lib/Queue';
 
 class DeliveryProblemsController {
   async show(req, res) {
@@ -97,7 +99,7 @@ class DeliveryProblemsController {
             {
               model: Deliveryman,
               as: 'deliveryman',
-              attributes: ['name'],
+              attributes: ['name', 'email'],
             },
             {
               model: Recipient,
@@ -118,6 +120,14 @@ class DeliveryProblemsController {
     delivery.canceled_at = new Date();
 
     await delivery.save();
+
+    const { deliveryman, recipient, product } = delivery;
+
+    await Queue.add(CancellationDeliveryMail.key, {
+      deliveryman,
+      recipient,
+      product,
+    });
 
     return res.json(deliveryProblems);
   }

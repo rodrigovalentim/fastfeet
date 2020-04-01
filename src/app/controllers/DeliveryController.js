@@ -53,6 +53,7 @@ class DeliveryController {
     const { id } = req.params;
 
     const delivery = await Delivery.findByPk(id, {
+      where: { canceled_at: null },
       attributes: ['id', 'product'],
       include: [
         {
@@ -79,6 +80,7 @@ class DeliveryController {
     const { page = 1 } = req.query;
 
     const delivery = await Delivery.findAll({
+      where: { canceled_at: null },
       order: ['id'],
       limit: 20,
       offset: (page - 1) * 20,
@@ -121,7 +123,9 @@ class DeliveryController {
 
     const { id } = req.params;
 
-    const delivery = await Delivery.findByPk(id);
+    const delivery = await Delivery.findByPk(id, {
+      where: { canceled_at: null },
+    });
 
     if (!delivery) {
       return res.status(400).json({ error: 'Delivery does not exists' });
@@ -153,7 +157,7 @@ class DeliveryController {
         {
           model: Deliveryman,
           as: 'deliveryman',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'email'],
         },
       ],
     });
@@ -186,6 +190,7 @@ class DeliveryController {
   async delete(req, res) {
     const { id } = req.params;
     const delivery = await Delivery.findByPk(id, {
+      where: { canceled_at: null },
       attributes: ['id', 'product', 'canceled_at'],
       include: [
         {
@@ -196,7 +201,7 @@ class DeliveryController {
         {
           model: Deliveryman,
           as: 'deliveryman',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'email'],
         },
       ],
     });
@@ -214,7 +219,7 @@ class DeliveryController {
     await delivery.save();
 
     const { deliveryman, recipient, product } = delivery;
-    /* alerta troca do destinatario */
+
     await Queue.add(CancellationDeliveryMail.key, {
       deliveryman,
       recipient,
